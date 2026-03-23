@@ -1,0 +1,37 @@
+@page "/warehouse-test"
+@rendermode InteractiveServer
+@using DefaultNamespace
+
+<h3>Warehouse Test</h3>
+
+<button @onclick="GetInventory">GetInventory</button>
+<button @onclick="() => PickItem(1)">PickItem (tray 1)</button>
+
+@if (result != null)
+{
+    <pre>@result</pre>
+}
+
+@if (error != null)
+{
+    <p style="color:red">@error</p>
+}
+
+@code {
+    private string? result;
+    private string? error;
+
+    private async Task GetInventory()
+    {
+        result = null; error = null;
+        try { result = await new WarehouseService().GetInventoryAsync(); }
+        catch (Exception ex) { error = ex.Message; }
+    }
+
+    private async Task PickItem(int trayId)
+    {
+        result = null; error = null;
+        try { result = await new WarehouseService().PickItemAsync(trayId); }
+        catch (Exception ex) { error = ex.Message; }
+    }
+}
