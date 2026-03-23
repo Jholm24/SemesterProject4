@@ -5,7 +5,17 @@
 <h3>Warehouse Test</h3>
 
 <button @onclick="GetInventory">GetInventory</button>
-<button @onclick="() => PickItem(1)">PickItem (tray 1)</button>
+
+<div>
+    <input type="number" @bind="pickTrayId" placeholder="Tray ID" />
+    <button @onclick="() => PickItem(pickTrayId)">PickItem</button>
+</div>
+
+<div>
+    <input type="number" @bind="insertTrayId" placeholder="Tray ID" />
+    <input type="text" @bind="insertName" placeholder="Name" />
+    <button @onclick="InsertItem">InsertItem</button>
+</div>
 
 @if (result != null)
 {
@@ -20,6 +30,9 @@
 @code {
     private string? result;
     private string? error;
+    private int pickTrayId;
+    private int insertTrayId;
+    private string insertName = "";
 
     private async Task GetInventory()
     {
@@ -32,6 +45,13 @@
     {
         result = null; error = null;
         try { result = await new WarehouseService().PickItemAsync(trayId); }
+        catch (Exception ex) { error = ex.Message; }
+    }
+
+    private async Task InsertItem()
+    {
+        result = null; error = null;
+        try { result = await new WarehouseService().InsertItemAsync(insertTrayId, insertName); }
         catch (Exception ex) { error = ex.Message; }
     }
 }
