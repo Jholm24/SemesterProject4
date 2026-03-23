@@ -1,0 +1,23 @@
+@using Core.Models
+
+<div class="machine-card">
+    <div class="card-header">
+        <span class="icon">@CardModel.Icon</span>
+        <h3>@CardModel.Name</h3>
+    </div>
+    <div class="card-body">
+        <p>@CardModel.Description</p>
+        <p>Type: @CardModel.MachineType</p>
+    </div>
+    <div class="card-actions">
+        @foreach (var action in CardModel.Actions)
+        {
+            <button @onclick="() => OnAction.InvokeAsync(action)">@action</button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public ComponentCardModel CardModel { get; set; } = new();
+    [Parameter] public EventCallback<string> OnAction { get; set; }
+}

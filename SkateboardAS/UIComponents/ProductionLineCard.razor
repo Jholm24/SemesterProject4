@@ -1,0 +1,17 @@
+@using Shared.Entities
+
+<div class="production-line-card">
+    <h3>@Line.Name</h3>
+    <p>Status: @(Line.IsActive ? "Active" : "Inactive")</p>
+    <p>Components: @string.Join(", ", Line.AssignedComponentIds)</p>
+    <div class="actions">
+        <button @onclick="() => OnStart.InvokeAsync(Line.Id)">Start</button>
+        <button @onclick="() => OnStop.InvokeAsync(Line.Id)">Stop</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ProductionLine Line { get; set; } = new();
+    [Parameter] public EventCallback<string> OnStart { get; set; }
+    [Parameter] public EventCallback<string> OnStop { get; set; }
+}
