@@ -1,57 +1,319 @@
 @page "/warehouse-test"
 @rendermode InteractiveServer
 @using DefaultNamespace
+@using System.Text.Json
 
-<h3>Warehouse Test</h3>
+<style>
+    .fb-page {
+        background: #f0f2f5;
+        min-height: 100vh;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-<button @onclick="GetInventory">GetInventory</button>
+    .fb-header {
+        background: #1877f2;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
 
-<div>
-    <input type="number" @bind="pickTrayId" placeholder="Tray ID" />
-    <button @onclick="() => PickItem(pickTrayId)">PickItem</button>
+    .fb-layout {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .fb-actions {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .fb-sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 20px;
+    }
+
+    .fb-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .fb-card h5 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #050505;
+        margin: 0 0 12px 0;
+    }
+
+    .fb-input {
+        border: 1px solid #ccd0d5;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 15px;
+        outline: none;
+        width: 120px;
+    }
+
+    .fb-input:focus {
+        border-color: #1877f2;
+        box-shadow: 0 0 0 2px rgba(24,119,242,0.2);
+    }
+
+    .fb-input-text {
+        border: 1px solid #ccd0d5;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 15px;
+        outline: none;
+        width: 180px;
+    }
+
+    .fb-input-text:focus {
+        border-color: #1877f2;
+        box-shadow: 0 0 0 2px rgba(24,119,242,0.2);
+    }
+
+    .fb-btn {
+        background: #1877f2;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .fb-btn:hover { background: #166fe5; }
+
+    .fb-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .fb-result-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f2f5;
+    }
+
+    .fb-result-row:last-child { border-bottom: none; }
+
+    .fb-result-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #65676b;
+        text-transform: uppercase;
+        min-width: 60px;
+    }
+
+    .fb-result-value {
+        font-size: 15px;
+        color: #050505;
+        margin-right: 16px;
+    }
+
+    .fb-result {
+        background: #f0f2f5;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #050505;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    .fb-error {
+        background: #ffebe8;
+        border-left: 4px solid #fa3e3e;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #c0392b;
+        margin-bottom: 12px;
+    }
+
+    .inv-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f2f5;
+        font-size: 14px;
+    }
+
+    .inv-row:last-child { border-bottom: none; }
+
+    .inv-id {
+        font-weight: 700;
+        color: #1877f2;
+        min-width: 30px;
+    }
+
+    .inv-name {
+        flex: 1;
+        color: #050505;
+        padding-left: 8px;
+    }
+
+    .inv-btn-pick {
+        background: #fa3e3e;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .inv-btn-pick:hover { background: #e03030; }
+
+    .inv-btn-add {
+        background: #1877f2;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .inv-btn-add:hover { background: #166fe5; }
+
+    .inv-inline-input {
+        border: 1px solid #ccd0d5;
+        border-radius: 5px;
+        padding: 4px 8px;
+        font-size: 12px;
+        outline: none;
+        width: 100%;
+        margin-top: 6px;
+        box-sizing: border-box;
+    }
+
+    .inv-inline-input:focus {
+        border-color: #1877f2;
+        box-shadow: 0 0 0 2px rgba(24,119,242,0.2);
+    }
+
+    .inv-inline-actions {
+        display: flex;
+        gap: 4px;
+        margin-top: 4px;
+    }
+
+    .fb-empty {
+        font-size: 13px;
+        color: #65676b;
+        font-style: italic;
+    }
+</style>
+
+<div class="fb-page">
+
+    <div class="fb-header">Warehouse</div>
+
+    @if (error != null)
+    {
+        <div class="fb-error">@error</div>
+    }
+
+    <div class="fb-card">
+        <h5>Inventory (@inventory.Count)</h5>
+        @if (inventory.Count == 0)
+        {
+            <span class="fb-empty">Tomt lager</span>
+        }
+        else
+        {
+            @foreach (var item in inventory)
+            {
+                <div class="inv-row" style="flex-direction:column; align-items:stretch;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="inv-id">#@item.Id</span>
+                        <span class="inv-name">@item.Content</span>
+                        <button class="inv-btn-add" @onclick="() => StartAdd(item.Id)">Insert</button>
+                        <button class="inv-btn-pick" @onclick="() => PickItem(item.Id)">Pick</button>
+                    </div>
+                    @if (addingToId == item.Id)
+                    {
+                        <input class="inv-inline-input" type="text" @bind="addName" placeholder="Nyt navn..." />
+                        <div class="inv-inline-actions">
+                            <button class="inv-btn-add" @onclick="() => ConfirmAdd(item.Id)">Gem</button>
+                            <button class="inv-btn-pick" @onclick="CancelAdd">Annuller</button>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    @if (actionResult != null)
+    {
+        <div class="fb-card">
+            <h5>Result</h5>
+            <div class="fb-result">@actionResult</div>
+        </div>
+    }
+
 </div>
-
-<div>
-    <input type="number" @bind="insertTrayId" placeholder="Tray ID" />
-    <input type="text" @bind="insertName" placeholder="Name" />
-    <button @onclick="InsertItem">InsertItem</button>
-</div>
-
-@if (result != null)
-{
-    <pre>@result</pre>
-}
-
-@if (error != null)
-{
-    <p style="color:red">@error</p>
-}
 
 @code {
-    private string? result;
-    private string? error;
-    private int pickTrayId;
-    private int insertTrayId;
-    private string insertName = "";
+    record InventoryItem(int Id, string Content);
 
-    private async Task GetInventory()
+    private List<InventoryItem> inventory = new();
+    private string? error;
+    private string? actionResult;
+    private int? addingToId;
+    private string addName = "";
+
+    private void StartAdd(int id) { addingToId = id; addName = ""; }
+    private void CancelAdd() { addingToId = null; addName = ""; }
+
+    private async Task ConfirmAdd(int id)
     {
-        result = null; error = null;
-        try { result = await new WarehouseService().GetInventoryAsync(); }
+        error = null; actionResult = null;
+        try { actionResult = await new WarehouseService().InsertItemAsync(id, addName); addingToId = null; addName = ""; await LoadInventory(); }
+        catch (Exception ex) { error = ex.Message; }
+    }
+
+    protected override async Task OnInitializedAsync() => await LoadInventory();
+
+    private async Task LoadInventory()
+    {
+        try
+        {
+            var json = await new WarehouseService().GetInventoryAsync();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            inventory.Clear();
+            if (root.TryGetProperty("Inventory", out var inv) && inv.ValueKind == JsonValueKind.Array)
+                foreach (var el in inv.EnumerateArray())
+                    inventory.Add(new InventoryItem(
+                        el.GetProperty("Id").GetInt32(),
+                        el.TryGetProperty("Content", out var c) ? c.GetString() ?? "" : ""));
+        }
         catch (Exception ex) { error = ex.Message; }
     }
 
     private async Task PickItem(int trayId)
     {
-        result = null; error = null;
-        try { result = await new WarehouseService().PickItemAsync(trayId); }
-        catch (Exception ex) { error = ex.Message; }
-    }
-
-    private async Task InsertItem()
-    {
-        result = null; error = null;
-        try { result = await new WarehouseService().InsertItemAsync(insertTrayId, insertName); }
+        error = null; actionResult = null;
+        try { actionResult = await new WarehouseService().PickItemAsync(trayId); await LoadInventory(); }
         catch (Exception ex) { error = ex.Message; }
     }
 }
