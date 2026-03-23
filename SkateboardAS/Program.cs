@@ -1,4 +1,4 @@
-using SkateboardAS.Components;
+using SkateboardAS.Core.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
