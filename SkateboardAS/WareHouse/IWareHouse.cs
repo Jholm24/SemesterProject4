@@ -2,13 +2,8 @@
 
 public interface IWareHouse
 {
-     //Properties
-     public int State { get; set;}
-     public int TrayID {get; set;}
-     
      //Methods 
-     public void PickItem (int trayID)
-     public void InsertItem(int trayID , string name)
-     public void GetInventory();
-     
+     Task<string> PickItemAsync(int trayId);
+     Task<string> InsertItemAsync(int trayId, string name);
+     Task<string> GetInventoryAsync();
 }
