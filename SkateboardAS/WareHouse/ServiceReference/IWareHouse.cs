@@ -1,6 +1,6 @@
 ﻿namespace DefaultNamespace;
 
-public interface IWareHouse
+public interface IWarehouse
 {
     //Methods 
     Task<string> PickItemAsync(int trayId);
