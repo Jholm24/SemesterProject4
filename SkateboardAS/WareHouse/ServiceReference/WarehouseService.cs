@@ -21,9 +21,4 @@ public class WarehouseService : IWarehouse
     var client = new EmulatorServiceClient();
     return await client.InsertItemAsync(trayId, name);
     }
-
-
-
-    
-
 }
