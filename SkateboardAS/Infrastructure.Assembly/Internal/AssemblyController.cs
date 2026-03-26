@@ -23,16 +23,17 @@ public class AssemblyController : IConnect, IAssembly
 
     public async Task ConnectMachine(int machineId)
     {
+        
 
 
         var options = new MqttClientOptionsBuilder()
-            .WithTcpServer(broker, port) 
+            .WithTcpServer(broker, machineId) 
             .WithClientId(clientID)
             .WithCleanSession()
             .Build();
         
         await _mqttClient.ConnectAsync(options);
-        Console.WriteLine($"Connected to {broker}:{port}");
+        Console.WriteLine($"Connected to {broker}:{machineId}");
     }
 
     // IConnect properties
@@ -49,4 +50,5 @@ public class AssemblyController : IConnect, IAssembly
     public void RemoveMachine(int machineId) { }
     public void DisconnectMachine(int machineId) { }
     public bool IsConnected(int machineId) { return false; }
+    
 }
