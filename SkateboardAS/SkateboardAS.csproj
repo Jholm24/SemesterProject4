@@ -44,4 +44,18 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="UIComponents\DragDropZone.razor" />
+    <_ContentIncludedByDefault Remove="UIComponents\MachineCard.razor" />
+    <_ContentIncludedByDefault Remove="UIComponents\ProductionLineCard.razor" />
+    <_ContentIncludedByDefault Remove="UIComponents\StatusIndicator.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Components\Pages\UIComponents\DragDropZone.razor" />
+    <AdditionalFiles Include="Components\Pages\UIComponents\MachineCard.razor" />
+    <AdditionalFiles Include="Components\Pages\UIComponents\ProductionLineCard.razor" />
+    <AdditionalFiles Include="Components\Pages\UIComponents\StatusIndicator.razor" />
+  </ItemGroup>
+
 </Project>

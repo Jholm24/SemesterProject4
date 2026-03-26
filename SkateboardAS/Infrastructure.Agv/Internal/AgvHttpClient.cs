@@ -9,8 +9,17 @@ internal class AgvHttpClient
 
     public async Task VerifyConnectionAsync(CancellationToken ct = default)
     {
-        // TODO: Implement - GET /status to verify AGV is reachable
-        await Task.CompletedTask;
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/status");
+
+        using var response = await _http.SendAsync(request, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+
+            throw new HttpRequestException(
+                $"AGV connection failed. Status: {(int)response.StatusCode} ({response.StatusCode}). Response: {body}");
+        }
     }
 
     public async Task<CommandResult> LoadProgramAsync(string programName, CancellationToken ct = default)

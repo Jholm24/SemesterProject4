@@ -1,0 +1,32 @@
+@page "/drag-drop-zone"
+@using Microsoft.AspNetCore.Components.Web
+
+
+
+<PageTitle>Drag and drop!</PageTitle>
+
+<h1>Drag and drop!</h1>
+
+@* <div class="drag-drop-zone" *@
+@*      ondragover="event.preventDefault()" *@
+@*      @ondrop="HandleDrop" *@
+@*      @ondragover:preventDefault> *@
+@*     @ChildContent *@
+@*     @if (!DroppedItems.Any()) *@
+@*     { *@
+@*         <p class="placeholder">Drag components here</p> *@
+@*     } *@
+@* </div> *@
+@* *@
+@* @code { *@
+@*     [Parameter] public RenderFragment? ChildContent { get; set; } *@
+@*     [Parameter] public EventCallback<string> OnItemDropped { get; set; } *@
+@* *@
+@*     private List<string> DroppedItems { get; set; } = new(); *@
+@* *@
+@*     private async Task HandleDrop(DragEventArgs e) *@
+@*     { *@
+@*         // TODO: Implement - extract dragged component id and invoke callback *@
+@*         await OnItemDropped.InvokeAsync(string.Empty); *@
+@*     } *@
+@* } *@
