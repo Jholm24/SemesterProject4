@@ -46,6 +46,9 @@ public class AssemblyController : IConnect, IAssembly
             return Task.CompletedTask;
         };
     }
+    
+    
+    // subscribes to the broker, and makes the connection 
 
     public async Task ConnectMachine(int machineId)
     {
@@ -64,6 +67,8 @@ public class AssemblyController : IConnect, IAssembly
     public int MachineId { get; set; }
     public string MachineType { get; set; }
 
+    
+    // This reads the data from the different topics in the MQTT 
     public async Task GetStatus()
     {
         await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
@@ -80,6 +85,8 @@ public class AssemblyController : IConnect, IAssembly
 
         Console.WriteLine("Subscribing to emulator/operation, emulator/status, emulator/checkhealth");
     }
+    
+    // This sends a specific command to the MQTT
     
     public async Task SendCommand(string command)
     {
