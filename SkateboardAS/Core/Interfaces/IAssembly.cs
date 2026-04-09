@@ -1,7 +1,7 @@
 namespace SemesterProjekt4.SkateboardAS.Core.Interfaces;
 public interface IAssembly
 {
-    int State { get; set; }
+    Task State { get; set; }
     bool IsHealthy { get; set; }
     int OperationId { get; set; }
     int LastOperationId { get; set; }
@@ -10,7 +10,7 @@ public interface IAssembly
     // remember to change the data types in the class diagram if the 
     // following method datatypes is correct 
     
-    int GetStatus();
+    Task GetStatus();
     bool GetHealth();
     int GetOperation();
     int GetLastOperation();

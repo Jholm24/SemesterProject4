@@ -8,7 +8,7 @@ namespace SemesterProjekt4.SkateboardAS.Assembly.Internal;
 public class AssemblyController : IConnect, IAssembly
 {
     // IAssembly properties
-    public int State { get; set; }
+    public Task State { get; set; }
     public bool IsHealthy { get; set; }
     public int OperationId { get; set; }
     public int LastOperationId { get; set; }
@@ -40,7 +40,19 @@ public class AssemblyController : IConnect, IAssembly
     public int MachineId { get; set; }
     public string MachineType { get; set; }
 
-    public int GetStatus()      { return State; }
+    public async Task GetStatus()
+    {
+        
+        
+        await _mqttClient.PublishAsync(new MqttApplicationMessage { Topic = topic }); 
+        
+        Console.WriteLine($"Published status to {broker}:{MachineId}");
+        
+        
+    }
+    
+    
+    
     public bool GetHealth()     { return IsHealthy; }
     public int GetOperation()   { return OperationId; }
     public int GetLastOperation() { return LastOperationId; }

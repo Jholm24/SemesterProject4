@@ -13,7 +13,7 @@ public class AssemblyModel
     }
 
 
-    public int State;
+    public Task State;
     public bool IsHealthy;
     public int OperationId;
     public int LastOperationId;
