@@ -2,16 +2,16 @@ namespace SemesterProjekt4.SkateboardAS.Core.Interfaces;
 public interface IAssembly
 {
     Task State { get; set; }
-    bool IsHealthy { get; set; }
-    int OperationId { get; set; }
-    int LastOperationId { get; set; }
+    Task<bool> IsHealthy { get; set; }
+    Task<int> OperationId { get; set; }
+    Task<int> LastOperationId { get; set; }
     
     
     // remember to change the data types in the class diagram if the 
     // following method datatypes is correct 
     
-    Task GetStatus();
-    bool GetHealth();
-    int GetOperation();
-    int GetLastOperation();
+    Task<int> GetStatus();
+    Task<bool> GetHealth();
+    Task<int> GetOperation();
+    Task<int> GetLastOperation();
 }

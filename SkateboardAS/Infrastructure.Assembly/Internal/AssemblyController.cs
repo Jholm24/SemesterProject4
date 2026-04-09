@@ -10,9 +10,9 @@ public class AssemblyController : IConnect, IAssembly
 {
     // IAssembly properties
     public Task State { get; set; }
-    public bool IsHealthy { get; set; }
-    public int OperationId { get; set; }
-    public int LastOperationId { get; set; }
+    public Task<bool> IsHealthy { get; set; }
+    public Task<int> OperationId { get; set; }
+    public Task<int> LastOperationId { get; set; }
     
     public string broker = "localhost";
     public int port = 1883;
@@ -31,13 +31,15 @@ public class AssemblyController : IConnect, IAssembly
             switch (topic)
             {
                 case "emulator/operation":
-                    OperationId = int.Parse(payload);
+                    OperationId = Task.FromResult(int.Parse(payload));
                     Console.WriteLine($"Operation: {payload}");
                     break;
+
                 case "emulator/status":
-                    IsHealthy = payload == "healthy";
+                    IsHealthy = Task.FromResult(payload == "healthy");
                     Console.WriteLine($"Status: {payload}");
                     break;
+
                 case "emulator/checkhealth":
                     Console.WriteLine($"Health: {payload}");
                     break;
@@ -69,22 +71,31 @@ public class AssemblyController : IConnect, IAssembly
 
     
     // This reads the data from the different topics in the MQTT 
-    public async Task GetStatus()
+    public async Task<int> GetStatus()
     {
-        await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
-            .WithTopic("emulator/operation")
-            .Build());
 
-        await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
-            .WithTopic("emulator/status")
-            .Build());
+            Thread.Sleep(2000);
+            await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
+                .WithTopic("emulator/operation")
+                .Build()); 
 
-        await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
-            .WithTopic("emulator/checkhealth")
-            .Build());
+        
+            await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
+                .WithTopic("emulator/status")
+                .Build());
 
-        Console.WriteLine("Subscribing to emulator/operation, emulator/status, emulator/checkhealth");
+            await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
+                .WithTopic("emulator/checkhealth")
+                .Build());
+    
+            Console.WriteLine("Subscribing to emulator/operation, emulator/status, emulator/checkhealth");
+            return 0; 
+
     }
+    
+    
+    
+    
     
     // This sends a specific command to the MQTT
     
@@ -97,9 +108,9 @@ public class AssemblyController : IConnect, IAssembly
     }
     
     
-    public bool GetHealth()     { return IsHealthy; }
-    public int GetOperation()   { return OperationId; }
-    public int GetLastOperation() { return LastOperationId; }
+    public Task<bool> GetHealth()     { return IsHealthy; }
+    public Task<int> GetOperation()   { return OperationId; }
+    public Task<int> GetLastOperation() {  return LastOperationId; }
 
     // IConnect methods
     public void AddMachine(int machineId, string machineType) { }
