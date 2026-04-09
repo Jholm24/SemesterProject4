@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Core.Models;
 
 namespace Infrastructure.Agv.Internal;
@@ -6,31 +7,39 @@ internal class AgvHttpClient
 {
     private const string BaseUrl = "http://localhost:8082/v1";
     private readonly HttpClient _http = new();
+    public string Name  = "AGV";
 
     public async Task VerifyConnectionAsync(CancellationToken ct = default)
     {
-        // TODO: Implement - GET /status to verify AGV is reachable
+        
+        _http.BaseAddress = new Uri(BaseUrl);
+        var response = await _http.GetAsync($"{BaseUrl}/staus", ct);
+        response.EnsureSuccessStatusCode();
         await Task.CompletedTask;
+        var request  = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/status");
+        var responseReturn = await _http.SendAsync(request, ct);
+        responseReturn.EnsureSuccessStatusCode();
+        //Implement if statement if needed
+        
     }
 
     public async Task<CommandResult> LoadProgramAsync(string programName, CancellationToken ct = default)
     {
-        // TODO: Implement - PUT /load with program name
-        await Task.CompletedTask;
+        var response = await _http.PutAsJsonAsync($"{BaseUrl}/load/, new {Name = programName}", ct);
+        response.EnsureSuccessStatusCode();
         return CommandResult.Ok();
     }
 
     public async Task<CommandResult> ExecuteProgramAsync(CancellationToken ct = default)
     {
-        // TODO: Implement - PUT /execute
-        await Task.CompletedTask;
+        var response = await _http.PutAsJsonAsync($"{BaseUrl}/execute", ct);
+        response.EnsureSuccessStatusCode();
         return CommandResult.Ok();
     }
 
     public async Task<AgvStatus> GetStatusAsync(CancellationToken ct = default)
     {
-        // TODO: Implement - GET /status and map response
-        await Task.CompletedTask;
-        return new AgvStatus();
+        var response = await _http.GetFromJsonAsync{}
+        $"{BaseUrl}/status", ct)};
     }
 }
