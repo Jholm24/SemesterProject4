@@ -4,27 +4,48 @@
 @inject NavigationManager Nav
 @inject ApiClient Api
 
-<div class="login-container">
-    <div class="login-card">
-        <h2 class="mb-4">SkateboardAS Login</h2>
+<div class="login-page">
+    <div class="login-box">
+        <div class="login-logo-wrap">
+            <div class="login-logo-icon">
+                <i class="bi bi-gear-wide-connected"></i>
+            </div>
+            <div class="login-title">SkateboardAS</div>
+            <div class="login-sub">Industri 4.0 produktionssystem</div>
+        </div>
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <div class="alert alert-danger">@errorMessage</div>
+            <div class="cb-feedback cb-feedback-error mb-3">@errorMessage</div>
         }
 
         <EditForm Model="@model" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-                <InputText class="form-control" @bind-Value="model.Username" />
+
+            <div class="cb-form-group">
+                <label class="cb-form-label">Brugernavn</label>
+                <InputText class="cb-form-control" @bind-Value="model.Username"
+                           placeholder="Skriv dit brugernavn" />
             </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <InputText class="form-control" @bind-Value="model.Password" type="password" />
+
+            <div class="cb-form-group">
+                <label class="cb-form-label">Adgangskode</label>
+                <InputText class="cb-form-control" @bind-Value="model.Password"
+                           type="password" placeholder="••••••••" />
             </div>
-            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
-                @(isLoading ? "Logging in..." : "Login")
+
+            <button type="submit" class="cb-btn-base cb-btn-primary cb-btn-full mt-3"
+                    disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <div class="cb-spinner" style="width:1rem;height:1rem;border-width:2px"></div>
+                    <span>Logger ind…</span>
+                }
+                else
+                {
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Log ind</span>
+                }
             </button>
         </EditForm>
     </div>
@@ -48,7 +69,6 @@
             if (result?.Token != null)
             {
                 await AuthProvider.SetTokenAsync(result.Token);
-
                 var authState = await AuthProvider.GetAuthenticationStateAsync();
                 var isManager = authState.User.IsInRole("Manager");
                 Nav.NavigateTo(isManager ? "/manager/dashboard" : "/operator/lines", forceLoad: false);
@@ -56,7 +76,7 @@
         }
         else
         {
-            errorMessage = "Invalid username or password.";
+            errorMessage = "Forkert brugernavn eller adgangskode.";
         }
 
         isLoading = false;

@@ -2,55 +2,429 @@
 @rendermode InteractiveServer
 @inject ApiClient Api
 
-<PageTitle>Dashboard</PageTitle>
-<h1 class="mb-4">Machine Dashboard</h1>
+<PageTitle>Monitoring — SkateboardAS</PageTitle>
 
 @if (isLoading)
 {
-    <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
-}
-else if (components.Count == 0)
-{
-    <div class="alert alert-warning">No machine components discovered. Ensure plugins are loaded.</div>
+    <div class="cb-loading"><div class="cb-spinner"></div></div>
 }
 else
 {
-    <div class="row g-3">
-        @foreach (var c in components)
-        {
-            <div class="col-md-4">
-                <div class="card h-100 machine-card">
-                    <div class="card-header d-flex align-items-center gap-2">
-                        <span class="machine-icon">⚙️</span>
-                        <strong>@c.Name</strong>
-                        <span class="ms-auto badge @StatusBadgeClass(c.Status)">@c.Status</span>
+    <div class="monitoring-layout">
+
+        <!-- ── Main Content ─────────────────────────────── -->
+        <div class="monitoring-main">
+
+            <!-- Process Overview -->
+            <div class="process-overview">
+                <div class="stat-card">
+                    <div class="stat-icon si-blue"><i class="bi bi-cpu"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">@components.Count</div>
+                        <div class="stat-label">Komponenter</div>
                     </div>
-                    <div class="card-body">
-                        <p class="mb-1 text-muted small">Type: @c.Type</p>
-                        <p class="mb-0 text-muted small">ID: @c.Id</p>
+                    <span class="cb-badge badge-active">Aktiv</span>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon si-green"><i class="bi bi-check-circle-fill"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">@components.Count(c => c.Status == "Running")</div>
+                        <div class="stat-label">Kørende</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon si-yellow"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">@components.Count(c => c.Status == "Error")</div>
+                        <div class="stat-label">Fejl</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon si-purple"><i class="bi bi-boxes"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">@components.Count(c => c.Status is "Idle" or "Offline")</div>
+                        <div class="stat-label">Inaktive</div>
                     </div>
                 </div>
             </div>
-        }
+
+            <!-- Component Manager Bar -->
+            <div class="comp-manager">
+                <div class="comp-type-item">
+                    <div class="comp-type-icon ci-blue"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <div class="comp-type-label">Warehouse</div>
+                        <div class="comp-type-count">@Warehouses.Count() plugins</div>
+                    </div>
+                </div>
+
+                <div class="comp-type-item">
+                    <div class="comp-type-icon ci-green"><i class="bi bi-truck"></i></div>
+                    <div>
+                        <div class="comp-type-label">AGV</div>
+                        <div class="comp-type-count">@Agvs.Count() plugins</div>
+                    </div>
+                </div>
+
+                <div class="comp-type-item">
+                    <div class="comp-type-icon ci-purple"><i class="bi bi-tools"></i></div>
+                    <div>
+                        <div class="comp-type-label">Assembly</div>
+                        <div class="comp-type-count">@Assemblies.Count() plugins</div>
+                    </div>
+                </div>
+
+                <button class="cb-btn-base cb-btn-secondary cb-btn-sm ml-auto"
+                        @onclick="RefreshComponents" disabled="@isRefreshing">
+                    <i class="bi bi-arrow-clockwise @(isRefreshing ? "spin-icon" : "")"></i>
+                    Opdater
+                </button>
+            </div>
+
+            <!-- Three-Column Machine Grid -->
+            <div class="machine-grid">
+
+                <!-- Warehouse -->
+                <div class="machine-col">
+                    <div class="col-header col-header-wh">
+                        <i class="bi bi-box-seam"></i>
+                        Warehouse (@Warehouses.Count())
+                    </div>
+
+                    @foreach (var c in Warehouses)
+                    {
+                        <div class="machine-panel" @onclick="() => OpenDetail(c)">
+                            <div class="mp-header">
+                                <div class="mp-icon mpi-blue"><i class="bi bi-box-seam"></i></div>
+                                <span class="mp-name">@c.Name</span>
+                                <span class="cb-badge @StatusBadgeClass(c.Status)">@StatusLabel(c.Status)</span>
+                            </div>
+                            <div class="mp-body">
+                                <div class="mp-row">
+                                    <span class="mp-label">ID</span>
+                                    <span style="font-size:0.72rem;color:var(--muted-fg)">
+                                        @c.Id[..Math.Min(8, c.Id.Length)]…
+                                    </span>
+                                </div>
+                                <div class="mp-row">
+                                    <span class="mp-label">Status</span>
+                                    <span>@c.Status</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!Warehouses.Any())
+                    {
+                        <div class="cb-empty">
+                            <i class="bi bi-box"></i>
+                            Ingen warehouse-plugins opdaget
+                        </div>
+                    }
+                </div>
+
+                <!-- AGV -->
+                <div class="machine-col">
+                    <div class="col-header col-header-agv">
+                        <i class="bi bi-truck"></i>
+                        AGV (@Agvs.Count())
+                    </div>
+
+                    @foreach (var c in Agvs)
+                    {
+                        <div class="machine-panel" @onclick="() => OpenDetail(c)">
+                            <div class="mp-header">
+                                <div class="mp-icon mpi-green"><i class="bi bi-truck"></i></div>
+                                <span class="mp-name">@c.Name</span>
+                                <span class="cb-badge @StatusBadgeClass(c.Status)">@StatusLabel(c.Status)</span>
+                            </div>
+                            <div class="mp-body">
+                                <div class="mp-row">
+                                    <span class="mp-label">ID</span>
+                                    <span style="font-size:0.72rem;color:var(--muted-fg)">
+                                        @c.Id[..Math.Min(8, c.Id.Length)]…
+                                    </span>
+                                </div>
+                                <div class="mp-row">
+                                    <span class="mp-label">Status</span>
+                                    <span>@c.Status</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!Agvs.Any())
+                    {
+                        <div class="cb-empty">
+                            <i class="bi bi-truck"></i>
+                            Ingen AGV-plugins opdaget
+                        </div>
+                    }
+                </div>
+
+                <!-- Assembly -->
+                <div class="machine-col">
+                    <div class="col-header col-header-asm">
+                        <i class="bi bi-tools"></i>
+                        Assemble Table (@Assemblies.Count())
+                    </div>
+
+                    @foreach (var c in Assemblies)
+                    {
+                        <div class="machine-panel" @onclick="() => OpenDetail(c)">
+                            <div class="mp-header">
+                                <div class="mp-icon mpi-purple"><i class="bi bi-tools"></i></div>
+                                <span class="mp-name">@c.Name</span>
+                                <span class="cb-badge @StatusBadgeClass(c.Status)">@StatusLabel(c.Status)</span>
+                            </div>
+                            <div class="mp-body">
+                                <div class="mp-row">
+                                    <span class="mp-label">ID</span>
+                                    <span style="font-size:0.72rem;color:var(--muted-fg)">
+                                        @c.Id[..Math.Min(8, c.Id.Length)]…
+                                    </span>
+                                </div>
+                                <div class="mp-row">
+                                    <span class="mp-label">Status</span>
+                                    <span>@c.Status</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!Assemblies.Any())
+                    {
+                        <div class="cb-empty">
+                            <i class="bi bi-tools"></i>
+                            Ingen assembly-plugins opdaget
+                        </div>
+                    }
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── Right Panel ───────────────────────────────── -->
+        <div class="monitoring-sidebar">
+
+            <!-- Control Board -->
+            <div class="control-board">
+                <div class="cb-title">
+                    <i class="bi bi-toggles"></i> Styring
+                </div>
+
+                <div class="cb-status">
+                    <div class="cb-dot @StatusDotClass(systemStatus)"></div>
+                    <span>@SystemStatusLabel(systemStatus)</span>
+                </div>
+
+                <div class="cb-buttons">
+                    <button class="cb-button cb-start"
+                            @onclick="StartSystem"
+                            disabled="@(systemStatus == "running" || isBusy)">
+                        <i class="bi bi-play-fill"></i>
+                        Start
+                    </button>
+                    <button class="cb-button cb-pause"
+                            @onclick="PauseSystem"
+                            disabled="@(systemStatus != "running" || isBusy)">
+                        <i class="bi bi-pause-fill"></i>
+                        Pause
+                    </button>
+                    <button class="cb-button cb-stop"
+                            @onclick="StopSystem"
+                            disabled="@(systemStatus == "idle" || isBusy)">
+                        <i class="bi bi-stop-fill"></i>
+                        Stop
+                    </button>
+                    <button class="cb-button cb-reset"
+                            @onclick="ResetSystem"
+                            disabled="@isBusy">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        Reset
+                    </button>
+                    <button class="cb-button cb-alarm"
+                            @onclick="TriggerAlarm"
+                            disabled="@isBusy">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Alarm
+                    </button>
+                    <button class="cb-button cb-settings">
+                        <i class="bi bi-gear"></i>
+                        Indst.
+                    </button>
+                </div>
+            </div>
+
+            <!-- Task Builder shortcut -->
+            <a href="/manager/taskbuilder" class="tb-link">
+                <i class="bi bi-diagram-3-fill"></i>
+                Task Builder
+            </a>
+
+        </div>
+    </div>
+}
+
+<!-- ── Detail Modal ──────────────────────────────────────── -->
+@if (selected != null)
+{
+    <div class="modal-overlay" @onclick="CloseDetail">
+        <div class="modal-box" @onclick:stopPropagation>
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">@selected.Name</div>
+                    <div class="modal-sub">@selected.Type</div>
+                </div>
+                <button class="modal-close-btn" @onclick="CloseDetail">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-stat-grid">
+                    <div class="modal-stat">
+                        <div class="modal-stat-label">Status</div>
+                        <div style="margin-top:0.375rem">
+                            <span class="cb-badge @StatusBadgeClass(selected.Status)">
+                                @StatusLabel(selected.Status)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="modal-stat">
+                        <div class="modal-stat-label">Type</div>
+                        <div class="modal-stat-value" style="font-size:0.9375rem;margin-top:0.25rem">
+                            @selected.Type
+                        </div>
+                    </div>
+                    <div class="modal-stat">
+                        <div class="modal-stat-label">Protokol</div>
+                        <div class="modal-stat-value" style="font-size:0.9375rem;margin-top:0.25rem">
+                            @ProtocolForType(selected.Type)
+                        </div>
+                    </div>
+                    <div class="modal-stat">
+                        <div class="modal-stat-label">ID</div>
+                        <div style="font-size:0.72rem;color:var(--muted-fg);margin-top:0.25rem;word-break:break-all">
+                            @selected.Id
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cb-card">
+                    <div class="cb-card-header">
+                        <i class="bi bi-info-circle"></i> Komponentdetaljer
+                    </div>
+                    <div class="cb-card-body">
+                        <table class="status-table">
+                            <tr>
+                                <td>Navn</td>
+                                <td>@selected.Name</td>
+                            </tr>
+                            <tr>
+                                <td>Maskintype</td>
+                                <td>@selected.Type</td>
+                            </tr>
+                            <tr>
+                                <td>Kommunikation</td>
+                                <td>@ProtocolForType(selected.Type)</td>
+                            </tr>
+                            <tr>
+                                <td>Driftsstatus</td>
+                                <td>
+                                    <span class="cb-badge @StatusBadgeClass(selected.Status)">
+                                        @selected.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 }
 
 @code {
     private List<ComponentInfo> components = new();
     private bool isLoading = true;
+    private bool isRefreshing;
+    private string systemStatus = "idle";
+    private bool isBusy;
+    private ComponentInfo? selected;
 
-    protected override async Task OnInitializedAsync()
+    private IEnumerable<ComponentInfo> Warehouses  => components.Where(c => c.Type == "Warehouse");
+    private IEnumerable<ComponentInfo> Agvs        => components.Where(c => c.Type == "AGV");
+    private IEnumerable<ComponentInfo> Assemblies  => components.Where(c => c.Type == "AssemblyStation");
+
+    protected override async Task OnInitializedAsync() => await RefreshComponents();
+
+    private async Task RefreshComponents()
     {
+        isRefreshing = true;
         components = await Api.GetAsync<List<ComponentInfo>>("api/components") ?? new();
         isLoading = false;
+        isRefreshing = false;
     }
 
-    private static string StatusBadgeClass(string status) => status switch
+    private void OpenDetail(ComponentInfo c) => selected = c;
+    private void CloseDetail() => selected = null;
+
+    private async Task StartSystem()
     {
-        "Running" => "bg-success",
-        "Error"   => "bg-danger",
-        "Idle"    => "bg-secondary",
-        _         => "bg-dark"
+        isBusy = true;
+        var resp = await Api.PostAsync("api/production/start",
+            new { TrayId = "default", ProcessId = "default" });
+        systemStatus = resp.IsSuccessStatusCode ? "running" : "idle";
+        isBusy = false;
+    }
+
+    private void PauseSystem()  { systemStatus = "paused"; }
+    private void StopSystem()   { systemStatus = "idle"; }
+    private void ResetSystem()  { systemStatus = "idle"; }
+    private void TriggerAlarm() { systemStatus = "alarm"; }
+
+    private static string StatusBadgeClass(string s) => s switch
+    {
+        "Running" => "badge-running",
+        "Error"   => "badge-error",
+        "Idle"    => "badge-idle",
+        _         => "badge-offline"
+    };
+
+    private static string StatusLabel(string s) => s switch
+    {
+        "Running" => "Kørende",
+        "Error"   => "Fejl",
+        "Idle"    => "Inaktiv",
+        "Offline" => "Offline",
+        _         => s
+    };
+
+    private static string StatusDotClass(string s) => s switch
+    {
+        "running" => "dot-green",
+        "paused"  => "dot-yellow",
+        "alarm"   => "dot-red",
+        _         => "dot-gray"
+    };
+
+    private static string SystemStatusLabel(string s) => s switch
+    {
+        "running" => "Kører",
+        "paused"  => "Pauseret",
+        "alarm"   => "Alarm",
+        _         => "Standby"
+    };
+
+    private static string ProtocolForType(string t) => t switch
+    {
+        "AGV"              => "REST",
+        "Warehouse"        => "SOAP",
+        "AssemblyStation"  => "MQTT",
+        _                  => "—"
     };
 
     private record ComponentInfo(string Id, string Name, string Type, string Status);

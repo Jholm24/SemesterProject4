@@ -5,60 +5,153 @@
 @using Shared.Services
 @using Shared.Entities
 
-<PageTitle>Line Control</PageTitle>
+<PageTitle>@(line?.Name ?? "Linjekontrol") — SkateboardAS</PageTitle>
 
 @if (line == null)
 {
-    <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
+    <div class="cb-loading"><div class="cb-spinner"></div></div>
 }
 else
 {
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <h1 class="mb-0">@line.Name</h1>
-        <StatusIndicator Status="@currentStatus" />
+    <div class="page-header">
+        <div class="flex items-center gap-3">
+            <a href="/operator/lines" class="cb-btn-base cb-btn-secondary cb-btn-sm">
+                <i class="bi bi-arrow-left"></i> Tilbage
+            </a>
+            <div>
+                <h1 class="page-title" style="margin-bottom:0">@line.Name</h1>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="cb-badge @StatusBadge(currentStatus)">@currentStatus</span>
+                    <span class="text-xs text-muted">Opdateret @lastUpdated.ToString("HH:mm:ss")</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (!string.IsNullOrEmpty(message))
     {
-        <div class="alert @(isError ? "alert-danger" : "alert-info") py-2 small">@message</div>
+        <div class="cb-feedback @(isError ? "cb-feedback-error" : "cb-feedback-info") mb-3">
+            @message
+        </div>
     }
 
-    <div class="row g-3 mb-4">
-        <div class="col-auto">
-            <button class="btn btn-success btn-lg" @onclick="StartLine" disabled="@(isBusy || currentStatus == "Running")">
-                ▶ Start
-            </button>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-warning btn-lg" @onclick="StopLine" disabled="@(isBusy || currentStatus != "Running")">
-                ■ Stop
-            </button>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-outline-secondary" @onclick="RefreshStatus" disabled="@isBusy">
-                ↻ Refresh
-            </button>
-        </div>
-    </div>
+    <div class="line-control-layout">
+        <!-- Left: Controls -->
+        <div>
+            <!-- Control buttons -->
+            <div class="cb-card mb-3">
+                <div class="cb-card-header">
+                    <i class="bi bi-toggles"></i> Linjestyring
+                </div>
+                <div class="cb-card-body">
+                    <div class="control-actions">
+                        <button class="cb-btn-base cb-btn-success cb-btn-lg"
+                                @onclick="StartLine"
+                                disabled="@(isBusy || currentStatus == "Running")">
+                            <i class="bi bi-play-fill"></i> Start
+                        </button>
+                        <button class="cb-btn-base cb-btn-warning cb-btn-lg"
+                                @onclick="StopLine"
+                                disabled="@(isBusy || currentStatus != "Running")">
+                            <i class="bi bi-stop-fill"></i> Stop
+                        </button>
+                        <button class="cb-btn-base cb-btn-secondary"
+                                @onclick="RefreshStatus"
+                                disabled="@isBusy">
+                            <i class="bi bi-arrow-clockwise"></i> Opdater
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-    @if (productionStatus != null)
-    {
-        <div class="card" style="max-width:400px">
-            <div class="card-header">Production Status</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-5">Current Step</dt>
-                    <dd class="col-sm-7">@productionStatus.CurrentStep</dd>
-                    <dt class="col-sm-5">Running</dt>
-                    <dd class="col-sm-7">@(productionStatus.IsRunning ? "Yes" : "No")</dd>
-                    <dt class="col-sm-5">Healthy</dt>
-                    <dd class="col-sm-7">@(productionStatus.IsHealthy ? "Yes" : "No")</dd>
-                    <dt class="col-sm-5">Updated</dt>
-                    <dd class="col-sm-7">@productionStatus.Timestamp.ToLocalTime().ToString("HH:mm:ss")</dd>
-                </dl>
+            <!-- Production Status -->
+            @if (productionStatus != null)
+            {
+                <div class="cb-card">
+                    <div class="cb-card-header">
+                        <i class="bi bi-activity"></i> Produktionsstatus
+                    </div>
+                    <div class="cb-card-body">
+                        <table class="status-table">
+                            <tr>
+                                <td>Aktuelt trin</td>
+                                <td>@productionStatus.CurrentStep</td>
+                            </tr>
+                            <tr>
+                                <td>Kører</td>
+                                <td>
+                                    @if (productionStatus.IsRunning)
+                                    {
+                                        <span class="cb-badge badge-running">Ja</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cb-badge badge-idle">Nej</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Sund</td>
+                                <td>
+                                    @if (productionStatus.IsHealthy)
+                                    {
+                                        <span class="cb-badge badge-active">Ja</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cb-badge badge-error">Nej</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Opdateret</td>
+                                <td>@productionStatus.Timestamp.ToLocalTime().ToString("HH:mm:ss")</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Right: Line Info Card -->
+        <div class="cb-card" style="align-self:flex-start">
+            <div class="cb-card-header">
+                <i class="bi bi-info-circle"></i> Linjeinfo
+            </div>
+            <div class="cb-card-body">
+                <div style="margin-bottom:1rem">
+                    <div style="font-size:0.75rem;color:var(--muted-fg);margin-bottom:0.25rem">Navn</div>
+                    <div style="font-weight:600">@line.Name</div>
+                </div>
+                <div style="margin-bottom:1rem">
+                    <div style="font-size:0.75rem;color:var(--muted-fg);margin-bottom:0.25rem">Status</div>
+                    <span class="cb-badge @(line.IsActive ? "badge-active" : "badge-inactive")">
+                        @(line.IsActive ? "Aktiv" : "Inaktiv")
+                    </span>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem;color:var(--muted-fg);margin-bottom:0.375rem">
+                        Komponenter (@line.AssignedComponentIds.Count)
+                    </div>
+                    @if (line.AssignedComponentIds.Any())
+                    {
+                        @foreach (var id in line.AssignedComponentIds)
+                        {
+                            <div style="font-size:0.8125rem;padding:0.2rem 0;color:#374151">
+                                <i class="bi bi-circle-fill"
+                                   style="font-size:0.375rem;vertical-align:middle;margin-right:0.375rem;color:#9ca3af"></i>
+                                @id
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-xs text-muted">Ingen komponenter tilknyttet</span>
+                    }
+                </div>
             </div>
         </div>
-    }
+    </div>
 }
 
 @code {
@@ -70,6 +163,7 @@ else
     private bool isError;
     private string? message;
     private ProductionStatusResult? productionStatus;
+    private DateTime lastUpdated = DateTime.Now;
 
     protected override async Task OnInitializedAsync()
     {
@@ -84,6 +178,7 @@ else
         currentStatus = productionStatus?.IsRunning == true ? "Running"
                       : productionStatus?.IsHealthy == false ? "Error"
                       : "Idle";
+        lastUpdated = DateTime.Now;
         isBusy = false;
     }
 
@@ -91,19 +186,21 @@ else
     {
         isBusy = true;
         message = null;
-        var response = await Api.PostAsync("api/production/start", new { TrayId = LineId, ProcessId = "default" });
+        var response = await Api.PostAsync("api/production/start",
+            new { TrayId = LineId, ProcessId = "default" });
         if (response.IsSuccessStatusCode)
         {
             productionStatus = await response.Content.ReadFromJsonAsync<ProductionStatusResult>();
             currentStatus = "Running";
-            message = "Production started.";
+            message = "Produktion startet.";
             isError = false;
         }
         else
         {
-            message = "Failed to start production.";
+            message = "Kunne ikke starte produktion.";
             isError = true;
         }
+        lastUpdated = DateTime.Now;
         isBusy = false;
     }
 
@@ -113,10 +210,18 @@ else
         message = null;
         await RefreshStatus();
         currentStatus = "Idle";
-        message = "Production stopped.";
+        message = "Produktion stoppet.";
         isError = false;
         isBusy = false;
     }
+
+    private static string StatusBadge(string s) => s switch
+    {
+        "Running" => "badge-running",
+        "Error"   => "badge-error",
+        "Idle"    => "badge-idle",
+        _         => "badge-offline"
+    };
 
     private record ProductionStatusResult(
         string ProductionLineId,

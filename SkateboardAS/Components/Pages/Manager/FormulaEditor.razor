@@ -4,78 +4,124 @@
 @using Shared.Services
 @using Shared.Entities
 
-<PageTitle>Formulas</PageTitle>
-<h1 class="mb-4">Formula Editor</h1>
+<PageTitle>Formler — SkateboardAS</PageTitle>
 
-<div class="row g-4">
-    <div class="col-md-7">
-        <h5>Existing Formulas</h5>
+<div class="page-header">
+    <h1 class="page-title">Formeleditor</h1>
+    <p class="page-sub">Definer produktionsopskrifter og komponentkrav</p>
+</div>
+
+<div class="two-col">
+    <!-- Left: Formula List -->
+    <div>
+        <div class="flex items-center justify-between mb-3">
+            <span style="font-size:0.875rem;font-weight:700;text-transform:uppercase;
+                         letter-spacing:0.06em;color:var(--muted-fg)">
+                Eksisterende formler
+            </span>
+            <span class="cb-badge badge-blue">@formulas.Count</span>
+        </div>
+
         @if (formulas.Count == 0)
         {
-            <p class="text-muted">No formulas yet.</p>
+            <div class="cb-empty">
+                <i class="bi bi-journal-text"></i>
+                Ingen formler endnu
+            </div>
         }
         else
         {
             @foreach (var f in formulas)
             {
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start">
-                            <div class="flex-grow-1">
-                                <strong>@f.Name</strong>
-                                <p class="text-muted small mb-1">@f.Description</p>
-                                <div class="text-muted small">
-                                    Required: @(f.RequiredComponentTypes.Any() ? string.Join(", ", f.RequiredComponentTypes) : "none")
-                                </div>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => StartEdit(f)">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(f.Id)">Delete</button>
-                            </div>
+                <div class="list-item">
+                    <div style="width:2.25rem;height:2.25rem;border-radius:var(--radius);
+                                background:#f3e8ff;color:#9333ea;display:flex;align-items:center;
+                                justify-content:center;font-size:1rem;flex-shrink:0">
+                        <i class="bi bi-journal-check"></i>
+                    </div>
+
+                    <div class="list-item-body">
+                        <div class="list-item-title">@f.Name</div>
+                        @if (!string.IsNullOrEmpty(f.Description))
+                        {
+                            <div class="list-item-sub">@f.Description</div>
+                        }
+                        <div class="flex gap-1 mt-2" style="flex-wrap:wrap">
+                            @foreach (var t in f.RequiredComponentTypes)
+                            {
+                                <span class="cb-badge @TypeBadge(t)">@t</span>
+                            }
                         </div>
+                    </div>
+
+                    <div class="list-item-actions">
+                        <button class="cb-btn-base cb-btn-outline cb-btn-sm"
+                                @onclick="() => StartEdit(f)">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="cb-btn-base cb-btn-outline cb-btn-sm"
+                                style="color:#dc2626;border-color:#fca5a5"
+                                @onclick="() => Delete(f.Id)">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                 </div>
             }
         }
     </div>
 
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header">@(isEditing ? "Edit Formula" : "New Formula")</div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    <input class="form-control" @bind="editFormula.Name" placeholder="e.g. Standard Board" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-control" rows="2" @bind="editFormula.Description"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Required Component Types</label>
-                    @foreach (var type in componentTypes)
-                    {
-                        var t = type;
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   id="type-@t"
-                                   checked="@editFormula.RequiredComponentTypes.Contains(t)"
-                                   @onchange="e => ToggleType(t, (bool)e.Value!)" />
-                            <label class="form-check-label" for="type-@t">@t</label>
-                        </div>
-                    }
-                </div>
-                @if (!string.IsNullOrEmpty(feedback))
+    <!-- Right: Form Panel -->
+    <div class="cb-card">
+        <div class="cb-card-header">
+            <i class="bi bi-@(isEditing ? "pencil" : "plus-circle")"></i>
+            @(isEditing ? "Rediger formel" : "Ny formel")
+        </div>
+        <div class="cb-card-body">
+            <div class="cb-form-group">
+                <label class="cb-form-label">Navn</label>
+                <input class="cb-form-control" @bind="editFormula.Name"
+                       placeholder="f.eks. Standard skateboard" />
+            </div>
+
+            <div class="cb-form-group">
+                <label class="cb-form-label">Beskrivelse</label>
+                <textarea class="cb-form-control" @bind="editFormula.Description"
+                          placeholder="Valgfri beskrivelse…"></textarea>
+            </div>
+
+            <div class="cb-form-group">
+                <label class="cb-form-label">Påkrævede komponenttyper</label>
+                @foreach (var type in ComponentTypes)
                 {
-                    <div class="alert alert-info py-1 small">@feedback</div>
+                    var t = type;
+                    <div class="cb-form-check">
+                        <input type="checkbox" class="cb-form-check"
+                               id="type-@t"
+                               checked="@editFormula.RequiredComponentTypes.Contains(t)"
+                               @onchange="e => ToggleType(t, (bool)e.Value!)" />
+                        <label for="type-@t" class="cb-form-check">
+                            <span class="cb-badge @TypeBadge(t)" style="margin-right:0.25rem">@t</span>
+                        </label>
+                    </div>
                 }
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary flex-grow-1" @onclick="Save">Save</button>
-                    @if (isEditing)
-                    {
-                        <button class="btn btn-outline-secondary" @onclick="CancelEdit">Cancel</button>
-                    }
-                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(feedback))
+            {
+                <div class="cb-feedback cb-feedback-success">@feedback</div>
+            }
+
+            <div class="flex gap-2 mt-3">
+                <button class="cb-btn-base cb-btn-primary"
+                        style="flex:1" @onclick="Save">
+                    <i class="bi bi-floppy"></i> Gem
+                </button>
+                @if (isEditing)
+                {
+                    <button class="cb-btn-base cb-btn-outline" @onclick="CancelEdit">
+                        Annuller
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -87,14 +133,11 @@
     private bool isEditing;
     private string? feedback;
 
-    private static readonly string[] componentTypes = ["AGV", "Warehouse", "AssemblyStation"];
+    private static readonly string[] ComponentTypes = ["AGV", "Warehouse", "AssemblyStation"];
 
     protected override async Task OnInitializedAsync() => await Refresh();
 
-    private async Task Refresh()
-    {
-        formulas = (await FormulaService.GetAllAsync()).ToList();
-    }
+    private async Task Refresh() => formulas = (await FormulaService.GetAllAsync()).ToList();
 
     private void ToggleType(string type, bool add)
     {
@@ -108,39 +151,32 @@
     {
         editFormula = new Formula
         {
-            Id = f.Id,
-            Name = f.Name,
+            Id = f.Id, Name = f.Name,
             Description = f.Description,
             RequiredComponentTypes = f.RequiredComponentTypes.ToList()
         };
         isEditing = true;
     }
 
-    private void CancelEdit()
-    {
-        editFormula = new();
-        isEditing = false;
-        feedback = null;
-    }
+    private void CancelEdit() { editFormula = new(); isEditing = false; feedback = null; }
 
     private async Task Save()
     {
         if (string.IsNullOrWhiteSpace(editFormula.Name)) return;
-
-        if (isEditing)
-            await FormulaService.UpdateAsync(editFormula);
-        else
-            await FormulaService.CreateAsync(editFormula);
-
-        feedback = "Saved.";
-        editFormula = new();
-        isEditing = false;
+        if (isEditing) await FormulaService.UpdateAsync(editFormula);
+        else           await FormulaService.CreateAsync(editFormula);
+        feedback = "Gemt.";
+        editFormula = new(); isEditing = false;
         await Refresh();
     }
 
-    private async Task Delete(string id)
+    private async Task Delete(string id) { await FormulaService.DeleteAsync(id); await Refresh(); }
+
+    private static string TypeBadge(string t) => t switch
     {
-        await FormulaService.DeleteAsync(id);
-        await Refresh();
-    }
+        "AGV"             => "badge-green",
+        "Warehouse"       => "badge-blue",
+        "AssemblyStation" => "badge-purple",
+        _                 => "badge-gray"
+    };
 }

@@ -5,69 +5,123 @@
 @using Shared.Services
 @using Shared.Entities
 
-<PageTitle>Production Lines</PageTitle>
-<h1 class="mb-4">Production Lines</h1>
+<PageTitle>Produktionslinjer — SkateboardAS</PageTitle>
 
-<div class="row g-4">
-    <div class="col-md-7">
-        <h5>Existing Lines</h5>
+<div class="page-header">
+    <h1 class="page-title">Produktionslinjer</h1>
+    <p class="page-sub">Opret og konfigurer produktionslinjer med komponenttildelinger</p>
+</div>
+
+<div class="two-col">
+    <!-- Left: Lines List -->
+    <div>
+        <div class="flex items-center justify-between mb-3">
+            <span style="font-size:0.875rem;font-weight:700;text-transform:uppercase;
+                         letter-spacing:0.06em;color:var(--muted-fg)">
+                Eksisterende linjer
+            </span>
+            <span class="cb-badge badge-blue">@lines.Count</span>
+        </div>
+
         @if (lines.Count == 0)
         {
-            <p class="text-muted">No production lines yet.</p>
+            <div class="cb-empty">
+                <i class="bi bi-diagram-3"></i>
+                Ingen produktionslinjer endnu
+            </div>
         }
         else
         {
             @foreach (var line in lines)
             {
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="flex-grow-1">
-                            <strong>@line.Name</strong>
-                            <div class="text-muted small">
-                                Components: @(line.AssignedComponentIds.Any() ? string.Join(", ", line.AssignedComponentIds) : "none")
-                            </div>
+                <div class="list-item">
+                    <div style="width:2.25rem;height:2.25rem;border-radius:var(--radius);
+                                background:#dcfce7;color:#16a34a;display:flex;align-items:center;
+                                justify-content:center;font-size:1rem;flex-shrink:0">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+
+                    <div class="list-item-body">
+                        <div class="list-item-title">@line.Name</div>
+                        <div class="list-item-sub">
+                            Komponenter: @(line.AssignedComponentIds.Any()
+                                ? string.Join(", ", line.AssignedComponentIds)
+                                : "ingen")
                         </div>
-                        <span class="badge @(line.IsActive ? "bg-success" : "bg-secondary")">
-                            @(line.IsActive ? "Active" : "Inactive")
-                        </span>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteLine(line.Id)">Delete</button>
+                    </div>
+
+                    <span class="cb-badge @(line.IsActive ? "badge-active" : "badge-inactive")">
+                        @(line.IsActive ? "Aktiv" : "Inaktiv")
+                    </span>
+
+                    <div class="list-item-actions">
+                        <button class="cb-btn-base cb-btn-outline cb-btn-sm"
+                                @onclick="() => StartEdit(line)">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="cb-btn-base cb-btn-outline cb-btn-sm"
+                                style="color:#dc2626;border-color:#fca5a5"
+                                @onclick="() => DeleteLine(line.Id)">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                 </div>
             }
         }
     </div>
 
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header">@(editLine.Id == string.Empty ? "New Production Line" : "Edit Line")</div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    <input class="form-control" @bind="editLine.Name" placeholder="e.g. Line A" />
-                </div>
+    <!-- Right: Form Panel -->
+    <div class="cb-card">
+        <div class="cb-card-header">
+            <i class="bi bi-@(editLine.Id == string.Empty ? "plus-circle" : "pencil")"></i>
+            @(editLine.Id == string.Empty ? "Ny produktionslinje" : "Rediger linje")
+        </div>
+        <div class="cb-card-body">
+            <div class="cb-form-group">
+                <label class="cb-form-label">Navn</label>
+                <input class="cb-form-control" @bind="editLine.Name"
+                       placeholder="f.eks. Linje A" />
+            </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Assign Components</label>
-                    @foreach (var comp in availableComponents)
-                    {
-                        var compId = comp.Id;
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   id="comp-@compId"
-                                   checked="@editLine.AssignedComponentIds.Contains(compId)"
-                                   @onchange="e => ToggleComponent(compId, (bool)e.Value!)" />
-                            <label class="form-check-label" for="comp-@compId">
-                                @comp.Name <span class="text-muted small">(@comp.Type)</span>
-                            </label>
-                        </div>
-                    }
-                </div>
-
-                @if (!string.IsNullOrEmpty(feedback))
+            <div class="cb-form-group">
+                <label class="cb-form-label">Tildel komponenter</label>
+                @if (!availableComponents.Any())
                 {
-                    <div class="alert alert-info py-1 small">@feedback</div>
+                    <p class="text-xs text-muted">
+                        Ingen komponenter opdaget. Sørg for at plugins er indlæst.
+                    </p>
                 }
-                <button class="btn btn-primary w-100" @onclick="SaveLine">Save</button>
+                @foreach (var comp in availableComponents)
+                {
+                    var compId = comp.Id;
+                    <div class="cb-form-check">
+                        <input type="checkbox"
+                               id="comp-@compId"
+                               checked="@editLine.AssignedComponentIds.Contains(compId)"
+                               @onchange="e => ToggleComponent(compId, (bool)e.Value!)" />
+                        <label for="comp-@compId">
+                            @comp.Name
+                            <span class="text-xs text-muted">(@comp.Type)</span>
+                        </label>
+                    </div>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(feedback))
+            {
+                <div class="cb-feedback cb-feedback-success">@feedback</div>
+            }
+
+            <div class="flex gap-2 mt-3">
+                <button class="cb-btn-base cb-btn-primary" style="flex:1" @onclick="SaveLine">
+                    <i class="bi bi-floppy"></i> Gem
+                </button>
+                @if (editLine.Id != string.Empty)
+                {
+                    <button class="cb-btn-base cb-btn-outline" @onclick="CancelEdit">
+                        Annuller
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -85,10 +139,7 @@
         availableComponents = await Api.GetAsync<List<ComponentInfo>>("api/components") ?? new();
     }
 
-    private async Task Refresh()
-    {
-        lines = (await LineService.GetAllAsync()).ToList();
-    }
+    private async Task Refresh() => lines = (await LineService.GetAllAsync()).ToList();
 
     private void ToggleComponent(string compId, bool add)
     {
@@ -97,6 +148,19 @@
         else if (!add)
             editLine.AssignedComponentIds.Remove(compId);
     }
+
+    private void StartEdit(ProductionLine line)
+    {
+        editLine = new ProductionLine
+        {
+            Id = line.Id, Name = line.Name,
+            IsActive = line.IsActive,
+            AssignedComponentIds = line.AssignedComponentIds.ToList()
+        };
+        feedback = null;
+    }
+
+    private void CancelEdit() { editLine = new() { Id = string.Empty }; feedback = null; }
 
     private async Task SaveLine()
     {
@@ -110,16 +174,12 @@
             await LineService.CreateAsync(editLine);
         }
 
-        feedback = "Saved.";
+        feedback = "Gemt.";
         editLine = new() { Id = string.Empty };
         await Refresh();
     }
 
-    private async Task DeleteLine(string id)
-    {
-        await LineService.DeleteAsync(id);
-        await Refresh();
-    }
+    private async Task DeleteLine(string id) { await LineService.DeleteAsync(id); await Refresh(); }
 
     private record ComponentInfo(string Id, string Name, string Type, string Status);
 }

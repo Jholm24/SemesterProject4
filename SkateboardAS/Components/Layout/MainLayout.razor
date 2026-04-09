@@ -1,33 +1,68 @@
 @inherits LayoutComponentBase
 @inject RoleState RoleState
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="app-shell">
+    <header class="app-header">
+        <div class="app-header-inner">
+            <div class="app-logo">
+                <i class="bi bi-gear-wide-connected"></i>
+                SkateboardAS
+            </div>
 
-    <main>
-        <div class="top-row px-4 d-flex align-items-center gap-3">
-            <label class="d-flex align-items-center gap-2 mb-0">
-                <input type="radio" name="role" checked="@(RoleState.CurrentRole == "Manager")"
-                       @onchange='() => RoleState.SetRole("Manager")' />
-                Manager
-            </label>
-            <label class="d-flex align-items-center gap-2 mb-0">
-                <input type="radio" name="role" checked="@(RoleState.CurrentRole == "Operator")"
-                       @onchange='() => RoleState.SetRole("Operator")' />
-                Operator
-            </label>
+            <nav class="app-nav">
+                @if (RoleState.CurrentRole == "Manager")
+                {
+                    <NavLink href="manager/dashboard" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-grid-fill"></i> Monitoring
+                    </NavLink>
+                    <NavLink href="manager/taskbuilder" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-diagram-3-fill"></i> Task Builder
+                    </NavLink>
+                    <NavLink href="manager/production-lines" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-diagram-3"></i> Linjer
+                    </NavLink>
+                    <NavLink href="manager/components" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-cpu-fill"></i> Komponenter
+                    </NavLink>
+                    <NavLink href="manager/formulas" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-journal-text"></i> Formler
+                    </NavLink>
+                    <NavLink href="manager/employees" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-people-fill"></i> Medarbejdere
+                    </NavLink>
+                }
+                else
+                {
+                    <NavLink href="operator/lines" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-play-circle-fill"></i> Mine Linjer
+                    </NavLink>
+                }
+            </nav>
+
+            <div class="role-switcher">
+                <label>
+                    <input type="radio" name="role"
+                           checked="@(RoleState.CurrentRole == "Manager")"
+                           @onchange='() => RoleState.SetRole("Manager")' />
+                    Manager
+                </label>
+                <label>
+                    <input type="radio" name="role"
+                           checked="@(RoleState.CurrentRole == "Operator")"
+                           @onchange='() => RoleState.SetRole("Operator")' />
+                    Operator
+                </label>
+            </div>
         </div>
+    </header>
 
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="app-main">
+        @Body
     </main>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    En uventet fejl opstod.
+    <a href="." class="reload">Genindlæs</a>
+    <span class="dismiss">✕</span>
 </div>

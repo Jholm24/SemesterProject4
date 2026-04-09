@@ -56,6 +56,10 @@ if (pluginsAvailable)
         foreach (var component in components)
             builder.Services.AddSingleton(component);
 
+        var machineComponents = mefContainer.GetExports<IMachineComponent>();
+        foreach (var mc in machineComponents)
+            builder.Services.AddSingleton<IMachineComponent>(mc);
+
         builder.Services.AddHostedService<ComponentLifecycleManager>();
     }
     catch (Exception ex)

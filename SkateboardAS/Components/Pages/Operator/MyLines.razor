@@ -8,41 +8,68 @@
 @using Shared.Services
 @using Shared.Entities
 
-<PageTitle>My Lines</PageTitle>
-<h1 class="mb-4">My Production Lines</h1>
+<PageTitle>Mine linjer — SkateboardAS</PageTitle>
+
+<div class="page-header">
+    <h1 class="page-title">Mine produktionslinjer</h1>
+    <p class="page-sub">Vælg en linje for at åbne kontrolpanelet</p>
+</div>
 
 @if (isLoading)
 {
-    <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
+    <div class="cb-loading"><div class="cb-spinner"></div></div>
 }
-else if (assignedLines.Count == 0)
+else if (!assignedLines.Any())
 {
-    <div class="alert alert-info">You have no production lines assigned.</div>
+    <div class="cb-empty" style="max-width:32rem;margin:3rem auto;text-align:center;padding:2.5rem">
+        <i class="bi bi-diagram-3" style="font-size:2.5rem;display:block;margin-bottom:1rem;opacity:0.3"></i>
+        <div style="font-size:1rem;font-weight:600;margin-bottom:0.5rem">Ingen linjer tildelt</div>
+        <div style="font-size:0.875rem;color:var(--muted-fg)">
+            Kontakt din manager for at få tildelt en produktionslinje.
+        </div>
+    </div>
 }
 else
 {
-    <div class="row g-3">
+    <div class="line-cards">
         @foreach (var line in assignedLines)
         {
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">@line.Name</h5>
-                        <p class="card-text">
-                            <span class="badge @(line.IsActive ? "bg-success" : "bg-secondary")">
-                                @(line.IsActive ? "Active" : "Inactive")
+            <div class="line-card">
+                <div class="line-card-body">
+                    <div style="width:2.75rem;height:2.75rem;border-radius:var(--radius);
+                                background:#dcfce7;color:#16a34a;display:flex;align-items:center;
+                                justify-content:center;font-size:1.25rem;margin-bottom:0.875rem">
+                        <i class="bi bi-diagram-3-fill"></i>
+                    </div>
+
+                    <div class="line-card-title">@line.Name</div>
+
+                    <div style="margin-bottom:0.875rem">
+                        <span class="cb-badge @(line.IsActive ? "badge-active" : "badge-inactive")">
+                            @(line.IsActive ? "Aktiv" : "Inaktiv")
+                        </span>
+                    </div>
+
+                    <div class="text-xs text-muted">
+                        @if (line.AssignedComponentIds.Any())
+                        {
+                            <span>
+                                @line.AssignedComponentIds.Count komponent(er) tilknyttet
                             </span>
-                        </p>
-                        <p class="text-muted small">
-                            Components: @(line.AssignedComponentIds.Any() ? string.Join(", ", line.AssignedComponentIds) : "none")
-                        </p>
+                        }
+                        else
+                        {
+                            <span>Ingen komponenter tilknyttet</span>
+                        }
                     </div>
-                    <div class="card-footer">
-                        <button class="btn btn-primary btn-sm w-100"
-                                @onclick="@(() => Nav.NavigateTo("/operator/lines/" + line.Id))">
-                            Open Control Panel
-                        </button>
-                    </div>
+                </div>
+
+                <div class="line-card-foot">
+                    <button class="cb-btn-base cb-btn-primary cb-btn-full"
+                            @onclick="@(() => Nav.NavigateTo("/operator/lines/" + line.Id))">
+                        <i class="bi bi-play-circle-fill"></i>
+                        Åbn kontrolpanel
+                    </button>
                 </div>
             </div>
         }
@@ -57,16 +84,14 @@ else
     {
         var authState = await AuthState.GetAuthenticationStateAsync();
         var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
         var allLines = (await LineService.GetAllAsync()).ToList();
 
         if (userId != null)
         {
             var user = await UserService.GetByIdAsync(userId);
-            if (user != null && user.AssignedProductionLineIds.Any())
-                assignedLines = allLines.Where(l => user.AssignedProductionLineIds.Contains(l.Id)).ToList();
-            else
-                assignedLines = allLines;
+            assignedLines = user?.AssignedProductionLineIds.Any() == true
+                ? allLines.Where(l => user.AssignedProductionLineIds.Contains(l.Id)).ToList()
+                : allLines;
         }
         else
         {
