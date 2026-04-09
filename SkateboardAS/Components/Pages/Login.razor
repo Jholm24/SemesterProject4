@@ -1,26 +1,65 @@
 @page "/login"
-<h1>Login</h1>
+@rendermode InteractiveServer
+@inject JwtAuthStateProvider AuthProvider
+@inject NavigationManager Nav
+@inject ApiClient Api
 
-<EditForm Model="@model" OnValidSubmit="HandleLogin">
-    <DataAnnotationsValidator />
-    <div>
-        <label>Username</label>
-        <InputText @bind-Value="model.Username" />
+<div class="login-container">
+    <div class="login-card">
+        <h2 class="mb-4">SkateboardAS Login</h2>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <EditForm Model="@model" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <InputText class="form-control" @bind-Value="model.Username" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <InputText class="form-control" @bind-Value="model.Password" type="password" />
+            </div>
+            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                @(isLoading ? "Logging in..." : "Login")
+            </button>
+        </EditForm>
     </div>
-    <div>
-        <label>Password</label>
-        <InputText @bind-Value="model.Password" type="password" />
-    </div>
-    <button type="submit">Login</button>
-</EditForm>
+</div>
 
 @code {
     private LoginModel model = new();
+    private string? errorMessage;
+    private bool isLoading;
 
     private async Task HandleLogin()
     {
-        // TODO: Implement - call AuthController, store JWT, navigate
-        await Task.CompletedTask;
+        isLoading = true;
+        errorMessage = null;
+
+        var response = await Api.PostAsync("api/auth/login", new { model.Username, model.Password });
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<TokenResponse>();
+            if (result?.Token != null)
+            {
+                await AuthProvider.SetTokenAsync(result.Token);
+
+                var authState = await AuthProvider.GetAuthenticationStateAsync();
+                var isManager = authState.User.IsInRole("Manager");
+                Nav.NavigateTo(isManager ? "/manager/dashboard" : "/operator/lines", forceLoad: false);
+            }
+        }
+        else
+        {
+            errorMessage = "Invalid username or password.";
+        }
+
+        isLoading = false;
     }
 
     private class LoginModel
@@ -28,4 +67,6 @@
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
     }
+
+    private record TokenResponse(string Token);
 }

@@ -15,18 +15,21 @@
     <Compile Remove="Infrastructure.Warehouse\**" />
     <Compile Remove="Orchestration\**" />
     <Compile Remove="Shared\**" />
+    <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Core\**" />
     <EmbeddedResource Remove="Infrastructure.Agv\**" />
     <EmbeddedResource Remove="Infrastructure.Assembly\**" />
     <EmbeddedResource Remove="Infrastructure.Warehouse\**" />
     <EmbeddedResource Remove="Orchestration\**" />
     <EmbeddedResource Remove="Shared\**" />
+    <EmbeddedResource Remove="Tests\**" />
     <None Remove="Core\**" />
     <None Remove="Infrastructure.Agv\**" />
     <None Remove="Infrastructure.Assembly\**" />
     <None Remove="Infrastructure.Warehouse\**" />
     <None Remove="Orchestration\**" />
     <None Remove="Shared\**" />
+    <None Remove="Tests\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +40,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.Composition" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />

@@ -13,8 +13,8 @@ public class ComponentServiceRegistry
 
     public IEnumerable<(IMachineComponent Component, IComponentMetadata Metadata)> GetAll()
     {
-        // TODO: Implement - use Lazy<T, TMetadata> for deferred instantiation
-        return Enumerable.Empty<(IMachineComponent, IComponentMetadata)>();
+        var exports = _container.GetExports<Lazy<IMachineComponent, IComponentMetadata>>();
+        return exports.Select(e => (e.Value, e.Metadata));
     }
 
     public T? Resolve<T>() where T : class

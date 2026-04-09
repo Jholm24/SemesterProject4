@@ -2,6 +2,60 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* Login */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+
+.login-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* Machine cards */
+.machine-card {
+    transition: box-shadow 0.2s;
+}
+.machine-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.machine-icon {
+    font-size: 1.4rem;
+}
+
+/* Status indicator */
+.status-indicator {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.status-running  { background: #d1fae5; color: #065f46; }
+.status-idle     { background: #e5e7eb; color: #374151; }
+.status-error    { background: #fee2e2; color: #991b1b; }
+.status-offline  { background: #1e1e2e; color: #adb5bd; }
+
+/* Nav section label */
+.nav-section-label {
+    padding: 0.6rem 1rem 0.2rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.4);
+}
+
 a, .btn-link {
     color: #006bb7;
 }
