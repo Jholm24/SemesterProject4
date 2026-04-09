@@ -19,7 +19,7 @@ internal class AgvHttpClient
         var request  = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/status");
         var responseReturn = await _http.SendAsync(request, ct);
         responseReturn.EnsureSuccessStatusCode();
-        //Implement if statement if needed
+        //Implement "if" statement if needed
         
     }
 
@@ -39,7 +39,7 @@ internal class AgvHttpClient
 
     public async Task<AgvStatus> GetStatusAsync(CancellationToken ct = default)
     {
-        var response = await _http.GetFromJsonAsync{}
-        $"{BaseUrl}/status", ct)};
+        var status = await _http.GetFromJsonAsync<AgvStatus>($"{BaseUrl}/status", ct);
+        return status ?? throw new InvalidOperationException("Received empty staturs from AGV.");
     }
 }
