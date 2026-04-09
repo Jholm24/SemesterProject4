@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Services;
 
@@ -6,7 +5,6 @@ namespace SkateboardAS.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[Authorize(Roles = "Manager")]
 public class UserController : ControllerBase
 {
     private readonly UserService _service;

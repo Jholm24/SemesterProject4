@@ -1,25 +1,127 @@
 @page "/operator/lines/{LineId}"
+@rendermode InteractiveServer
+@inject ApiClient Api
+@inject ProductionLineService LineService
+@using Shared.Services
+@using Shared.Entities
 
-<h1>Line Control: @LineId</h1>
+<PageTitle>Line Control</PageTitle>
 
-<StatusIndicator Status="@currentStatus" />
+@if (line == null)
+{
+    <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
+}
+else
+{
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <h1 class="mb-0">@line.Name</h1>
+        <StatusIndicator Status="@currentStatus" />
+    </div>
 
-<button @onclick="StartLine">Start</button>
-<button @onclick="StopLine">Stop</button>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert @(isError ? "alert-danger" : "alert-info") py-2 small">@message</div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-auto">
+            <button class="btn btn-success btn-lg" @onclick="StartLine" disabled="@(isBusy || currentStatus == "Running")">
+                ▶ Start
+            </button>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-warning btn-lg" @onclick="StopLine" disabled="@(isBusy || currentStatus != "Running")">
+                ■ Stop
+            </button>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-secondary" @onclick="RefreshStatus" disabled="@isBusy">
+                ↻ Refresh
+            </button>
+        </div>
+    </div>
+
+    @if (productionStatus != null)
+    {
+        <div class="card" style="max-width:400px">
+            <div class="card-header">Production Status</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Current Step</dt>
+                    <dd class="col-sm-7">@productionStatus.CurrentStep</dd>
+                    <dt class="col-sm-5">Running</dt>
+                    <dd class="col-sm-7">@(productionStatus.IsRunning ? "Yes" : "No")</dd>
+                    <dt class="col-sm-5">Healthy</dt>
+                    <dd class="col-sm-7">@(productionStatus.IsHealthy ? "Yes" : "No")</dd>
+                    <dt class="col-sm-5">Updated</dt>
+                    <dd class="col-sm-7">@productionStatus.Timestamp.ToLocalTime().ToString("HH:mm:ss")</dd>
+                </dl>
+            </div>
+        </div>
+    }
+}
 
 @code {
     [Parameter] public string LineId { get; set; } = string.Empty;
-    private string currentStatus = "Idle";
+
+    private ProductionLine? line;
+    private string currentStatus = "Offline";
+    private bool isBusy;
+    private bool isError;
+    private string? message;
+    private ProductionStatusResult? productionStatus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        line = await LineService.GetByIdAsync(LineId);
+        await RefreshStatus();
+    }
+
+    private async Task RefreshStatus()
+    {
+        isBusy = true;
+        productionStatus = await Api.GetAsync<ProductionStatusResult>("api/production/status");
+        currentStatus = productionStatus?.IsRunning == true ? "Running"
+                      : productionStatus?.IsHealthy == false ? "Error"
+                      : "Idle";
+        isBusy = false;
+    }
 
     private async Task StartLine()
     {
-        // TODO: Implement - call ProductionController start
-        await Task.CompletedTask;
+        isBusy = true;
+        message = null;
+        var response = await Api.PostAsync("api/production/start", new { TrayId = LineId, ProcessId = "default" });
+        if (response.IsSuccessStatusCode)
+        {
+            productionStatus = await response.Content.ReadFromJsonAsync<ProductionStatusResult>();
+            currentStatus = "Running";
+            message = "Production started.";
+            isError = false;
+        }
+        else
+        {
+            message = "Failed to start production.";
+            isError = true;
+        }
+        isBusy = false;
     }
 
     private async Task StopLine()
     {
-        // TODO: Implement - call ProductionController stop
-        await Task.CompletedTask;
+        isBusy = true;
+        message = null;
+        await RefreshStatus();
+        currentStatus = "Idle";
+        message = "Production stopped.";
+        isError = false;
+        isBusy = false;
     }
+
+    private record ProductionStatusResult(
+        string ProductionLineId,
+        string CurrentStep,
+        bool IsRunning,
+        bool IsHealthy,
+        DateTime Timestamp);
 }

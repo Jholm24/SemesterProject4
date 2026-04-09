@@ -1,25 +1,57 @@
 @page "/manager/dashboard"
+@rendermode InteractiveServer
+@inject ApiClient Api
 
-<h1>Manager Dashboard</h1>
-<p>Discovered machine components:</p>
+<PageTitle>Dashboard</PageTitle>
+<h1 class="mb-4">Machine Dashboard</h1>
 
-@foreach (var card in componentCards)
+@if (isLoading)
 {
-    <MachineCard CardModel="@card" OnAction="HandleAction" />
+    <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
+}
+else if (components.Count == 0)
+{
+    <div class="alert alert-warning">No machine components discovered. Ensure plugins are loaded.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var c in components)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 machine-card">
+                    <div class="card-header d-flex align-items-center gap-2">
+                        <span class="machine-icon">⚙️</span>
+                        <strong>@c.Name</strong>
+                        <span class="ms-auto badge @StatusBadgeClass(c.Status)">@c.Status</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1 text-muted small">Type: @c.Type</p>
+                        <p class="mb-0 text-muted small">ID: @c.Id</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 }
 
 @code {
-    private List<Core.Models.ComponentCardModel> componentCards = new();
+    private List<ComponentInfo> components = new();
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Implement - fetch component metadata from ComponentDiscoveryController
-        await Task.CompletedTask;
+        components = await Api.GetAsync<List<ComponentInfo>>("api/components") ?? new();
+        isLoading = false;
     }
 
-    private async Task HandleAction(string action)
+    private static string StatusBadgeClass(string status) => status switch
     {
-        // TODO: Implement - dispatch action to appropriate controller
-        await Task.CompletedTask;
-    }
+        "Running" => "bg-success",
+        "Error"   => "bg-danger",
+        "Idle"    => "bg-secondary",
+        _         => "bg-dark"
+    };
+
+    private record ComponentInfo(string Id, string Name, string Type, string Status);
 }

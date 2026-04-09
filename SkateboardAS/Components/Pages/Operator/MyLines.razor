@@ -1,7 +1,78 @@
 @page "/operator/lines"
+@rendermode InteractiveServer
+@inject ProductionLineService LineService
+@inject UserService UserService
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+@using System.Security.Claims
+@using Shared.Services
+@using Shared.Entities
 
-<h1>My Production Lines</h1>
+<PageTitle>My Lines</PageTitle>
+<h1 class="mb-4">My Production Lines</h1>
+
+@if (isLoading)
+{
+    <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
+}
+else if (assignedLines.Count == 0)
+{
+    <div class="alert alert-info">You have no production lines assigned.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var line in assignedLines)
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@line.Name</h5>
+                        <p class="card-text">
+                            <span class="badge @(line.IsActive ? "bg-success" : "bg-secondary")">
+                                @(line.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </p>
+                        <p class="text-muted small">
+                            Components: @(line.AssignedComponentIds.Any() ? string.Join(", ", line.AssignedComponentIds) : "none")
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-sm w-100"
+                                @onclick="@(() => Nav.NavigateTo("/operator/lines/" + line.Id))">
+                            Open Control Panel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
 
 @code {
-    // TODO: Implement - list assigned production lines
+    private List<ProductionLine> assignedLines = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var allLines = (await LineService.GetAllAsync()).ToList();
+
+        if (userId != null)
+        {
+            var user = await UserService.GetByIdAsync(userId);
+            if (user != null && user.AssignedProductionLineIds.Any())
+                assignedLines = allLines.Where(l => user.AssignedProductionLineIds.Contains(l.Id)).ToList();
+            else
+                assignedLines = allLines;
+        }
+        else
+        {
+            assignedLines = allLines;
+        }
+
+        isLoading = false;
+    }
 }

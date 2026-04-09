@@ -1,7 +1,153 @@
 @page "/manager/employees"
+@rendermode InteractiveServer
+@inject UserService UserService
+@inject ProductionLineService LineService
+@inject ApiClient Api
+@using Shared.Services
+@using Shared.Identity
+@using Shared.Entities
 
-<h1>Employee Management</h1>
+<PageTitle>Employee Management</PageTitle>
+<h1 class="mb-4">Employee Management</h1>
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <h5>Operators</h5>
+        @if (users.Count == 0)
+        {
+            <p class="text-muted">No operators registered.</p>
+        }
+        else
+        {
+            @foreach (var u in users)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="flex-grow-1">
+                                <strong>@u.UserName</strong>
+                                <span class="ms-2 badge bg-secondary">@u.Role</span>
+                                <div class="text-muted small mt-1">
+                                    Lines: @(u.AssignedProductionLineIds.Any()
+                                        ? string.Join(", ", u.AssignedProductionLineIds.Select(id => lines.FirstOrDefault(l => l.Id == id)?.Name ?? id))
+                                        : "none")
+                                </div>
+                            </div>
+                            <div>
+                                <select class="form-select form-select-sm mb-1" @bind="assignLineId">
+                                    <option value="">— assign line —</option>
+                                    @foreach (var l in lines)
+                                    {
+                                        <option value="@l.Id">@l.Name</option>
+                                    }
+                                </select>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            @onclick="() => Assign(u.Id, assignLineId)"
+                                            disabled="@string.IsNullOrEmpty(assignLineId)">
+                                        Assign
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning"
+                                            @onclick="() => Unassign(u.Id, assignLineId)"
+                                            disabled="@string.IsNullOrEmpty(assignLineId)">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">Register New Operator</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input class="form-control" @bind="newUser.Username" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input class="form-control" type="password" @bind="newUser.Password" />
+                </div>
+                @if (!string.IsNullOrEmpty(registerFeedback))
+                {
+                    <div class="alert @(registerError ? "alert-danger" : "alert-success") py-1 small">
+                        @registerFeedback
+                    </div>
+                }
+                <button class="btn btn-primary w-100" @onclick="RegisterOperator">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    // TODO: Implement - list, register, assign, remove operators
+    private List<AppUser> users = new();
+    private List<ProductionLine> lines = new();
+    private string assignLineId = string.Empty;
+    private string? registerFeedback;
+    private bool registerError;
+    private NewUserModel newUser = new();
+
+    protected override async Task OnInitializedAsync() => await Refresh();
+
+    private async Task Refresh()
+    {
+        users = (await UserService.GetAllAsync()).ToList();
+        lines = (await LineService.GetAllAsync()).ToList();
+    }
+
+    private async Task Assign(string userId, string lineId)
+    {
+        if (string.IsNullOrEmpty(lineId)) return;
+        await UserService.AssignToLineAsync(userId, lineId);
+        await Refresh();
+    }
+
+    private async Task Unassign(string userId, string lineId)
+    {
+        if (string.IsNullOrEmpty(lineId)) return;
+        await UserService.RemoveFromLineAsync(userId, lineId);
+        await Refresh();
+    }
+
+    private async Task RegisterOperator()
+    {
+        if (string.IsNullOrWhiteSpace(newUser.Username) || string.IsNullOrWhiteSpace(newUser.Password))
+        {
+            registerFeedback = "Username and password are required.";
+            registerError = true;
+            return;
+        }
+
+        var response = await Api.PostAsync("api/auth/register", new
+        {
+            newUser.Username,
+            newUser.Password,
+            Role = "Operator"
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            registerFeedback = $"Operator '{newUser.Username}' registered.";
+            registerError = false;
+            newUser = new();
+            await Refresh();
+        }
+        else
+        {
+            registerFeedback = "Registration failed. Username may already exist.";
+            registerError = true;
+        }
+    }
+
+    private class NewUserModel
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
 }

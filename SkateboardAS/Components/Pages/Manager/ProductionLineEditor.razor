@@ -1,22 +1,125 @@
 @page "/manager/production-lines"
+@rendermode InteractiveServer
+@inject ProductionLineService LineService
+@inject ApiClient Api
+@using Shared.Services
+@using Shared.Entities
 
-<h1>Production Line Editor</h1>
-<p>Drag and drop components to compose production lines.</p>
+<PageTitle>Production Lines</PageTitle>
+<h1 class="mb-4">Production Lines</h1>
 
-<DragDropZone OnItemDropped="HandleComponentDropped">
-    @foreach (var lineId in composedLineIds)
-    {
-        <span class="component-badge">@lineId</span>
-    }
-</DragDropZone>
+<div class="row g-4">
+    <div class="col-md-7">
+        <h5>Existing Lines</h5>
+        @if (lines.Count == 0)
+        {
+            <p class="text-muted">No production lines yet.</p>
+        }
+        else
+        {
+            @foreach (var line in lines)
+            {
+                <div class="card mb-3">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <strong>@line.Name</strong>
+                            <div class="text-muted small">
+                                Components: @(line.AssignedComponentIds.Any() ? string.Join(", ", line.AssignedComponentIds) : "none")
+                            </div>
+                        </div>
+                        <span class="badge @(line.IsActive ? "bg-success" : "bg-secondary")">
+                            @(line.IsActive ? "Active" : "Inactive")
+                        </span>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteLine(line.Id)">Delete</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">@(editLine.Id == string.Empty ? "New Production Line" : "Edit Line")</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" @bind="editLine.Name" placeholder="e.g. Line A" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Assign Components</label>
+                    @foreach (var comp in availableComponents)
+                    {
+                        var compId = comp.Id;
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   id="comp-@compId"
+                                   checked="@editLine.AssignedComponentIds.Contains(compId)"
+                                   @onchange="e => ToggleComponent(compId, (bool)e.Value!)" />
+                            <label class="form-check-label" for="comp-@compId">
+                                @comp.Name <span class="text-muted small">(@comp.Type)</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(feedback))
+                {
+                    <div class="alert alert-info py-1 small">@feedback</div>
+                }
+                <button class="btn btn-primary w-100" @onclick="SaveLine">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    private List<string> composedLineIds = new();
+    private List<ProductionLine> lines = new();
+    private List<ComponentInfo> availableComponents = new();
+    private ProductionLine editLine = new() { Id = string.Empty };
+    private string? feedback;
 
-    private async Task HandleComponentDropped(string componentId)
+    protected override async Task OnInitializedAsync()
     {
-        // TODO: Implement - add component to production line
-        composedLineIds.Add(componentId);
-        await Task.CompletedTask;
+        await Refresh();
+        availableComponents = await Api.GetAsync<List<ComponentInfo>>("api/components") ?? new();
     }
+
+    private async Task Refresh()
+    {
+        lines = (await LineService.GetAllAsync()).ToList();
+    }
+
+    private void ToggleComponent(string compId, bool add)
+    {
+        if (add && !editLine.AssignedComponentIds.Contains(compId))
+            editLine.AssignedComponentIds.Add(compId);
+        else if (!add)
+            editLine.AssignedComponentIds.Remove(compId);
+    }
+
+    private async Task SaveLine()
+    {
+        if (string.IsNullOrWhiteSpace(editLine.Name)) return;
+
+        if (lines.Any(l => l.Id == editLine.Id))
+            await LineService.UpdateAsync(editLine);
+        else
+        {
+            editLine.Id = Guid.NewGuid().ToString();
+            await LineService.CreateAsync(editLine);
+        }
+
+        feedback = "Saved.";
+        editLine = new() { Id = string.Empty };
+        await Refresh();
+    }
+
+    private async Task DeleteLine(string id)
+    {
+        await LineService.DeleteAsync(id);
+        await Refresh();
+    }
+
+    private record ComponentInfo(string Id, string Name, string Type, string Status);
 }

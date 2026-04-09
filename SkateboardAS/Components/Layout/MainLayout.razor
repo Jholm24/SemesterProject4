@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@inject RoleState RoleState
 
 <div class="page">
     <div class="sidebar">
@@ -6,8 +7,17 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        <div class="top-row px-4 d-flex align-items-center gap-3">
+            <label class="d-flex align-items-center gap-2 mb-0">
+                <input type="radio" name="role" checked="@(RoleState.CurrentRole == "Manager")"
+                       @onchange='() => RoleState.SetRole("Manager")' />
+                Manager
+            </label>
+            <label class="d-flex align-items-center gap-2 mb-0">
+                <input type="radio" name="role" checked="@(RoleState.CurrentRole == "Operator")"
+                       @onchange='() => RoleState.SetRole("Operator")' />
+                Operator
+            </label>
         </div>
 
         <article class="content px-4">

@@ -1,0 +1,18 @@
+@rendermode InteractiveServer
+@inject JwtAuthStateProvider AuthProvider
+@inject NavigationManager Nav
+
+<AuthorizeView>
+    <Authorized>
+        <span class="me-3 text-muted small">@context.User.Identity?.Name</span>
+        <button class="btn btn-sm btn-outline-secondary" @onclick="Logout">Logout</button>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthProvider.ClearTokenAsync();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

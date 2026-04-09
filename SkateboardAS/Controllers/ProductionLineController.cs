@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities;
 using Shared.Services;
@@ -7,7 +6,6 @@ namespace SkateboardAS.Controllers;
 
 [ApiController]
 [Route("api/production-lines")]
-[Authorize]
 public class ProductionLineController : ControllerBase
 {
     private readonly ProductionLineService _service;
@@ -25,7 +23,7 @@ public class ProductionLineController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Manager")]
+
     public async Task<IActionResult> Create([FromBody] ProductionLine line)
     {
         await _service.CreateAsync(line);
@@ -33,7 +31,7 @@ public class ProductionLineController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Manager")]
+
     public async Task<IActionResult> Update(string id, [FromBody] ProductionLine line)
     {
         await _service.UpdateAsync(line);
@@ -41,7 +39,7 @@ public class ProductionLineController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Manager")]
+
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);

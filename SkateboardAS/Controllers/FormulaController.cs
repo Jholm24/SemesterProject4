@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Entities;
 using Shared.Services;
@@ -7,7 +6,6 @@ namespace SkateboardAS.Controllers;
 
 [ApiController]
 [Route("api/formulas")]
-[Authorize]
 public class FormulaController : ControllerBase
 {
     private readonly FormulaService _service;
@@ -25,7 +23,7 @@ public class FormulaController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Manager")]
+
     public async Task<IActionResult> Create([FromBody] Formula formula)
     {
         await _service.CreateAsync(formula);
@@ -33,7 +31,7 @@ public class FormulaController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Manager")]
+
     public async Task<IActionResult> Update(string id, [FromBody] Formula formula)
     {
         await _service.UpdateAsync(formula);
@@ -41,7 +39,7 @@ public class FormulaController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Manager")]
+
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);

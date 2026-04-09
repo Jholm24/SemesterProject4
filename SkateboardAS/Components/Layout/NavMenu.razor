@@ -8,23 +8,41 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Manager">
+            <Authorized>
+                <div class="nav-section-label">Manager</div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="manager/dashboard">
+                        <span class="bi bi-grid-fill" aria-hidden="true"></span> Dashboard
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="manager/production-lines">
+                        <span class="bi bi-diagram-3-fill" aria-hidden="true"></span> Production Lines
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="manager/formulas">
+                        <span class="bi bi-journal-text" aria-hidden="true"></span> Formulas
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="manager/employees">
+                        <span class="bi bi-people-fill" aria-hidden="true"></span> Employees
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Operator">
+            <Authorized>
+                <div class="nav-section-label">Operator</div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="operator/lines">
+                        <span class="bi bi-play-circle-fill" aria-hidden="true"></span> My Lines
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
     </nav>
 </div>
-

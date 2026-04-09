@@ -1,7 +1,11 @@
 @page "/"
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+@inject RoleState RoleState
 
-<PageTitle>Home</PageTitle>
-
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+@code {
+    protected override void OnInitialized()
+    {
+        Nav.NavigateTo(RoleState.CurrentRole == "Manager" ? "/manager/dashboard" : "/operator/lines");
+    }
+}
