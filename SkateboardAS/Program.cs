@@ -7,6 +7,8 @@ using Orchestration.Validation;
 using Shared.Data;
 using Shared.Identity;
 using SkateboardAS.Components;
+using SemesterProjekt4.SkateboardAS.Core.Interfaces;
+using SemesterProjekt4.SkateboardAS.Assembly.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,5 +81,11 @@ app.MapStaticAssets();
 app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+var controller = new AssemblyController { MachineId = 1, MachineType = "Assembly" };
+await controller.ConnectMachine(1883);
+await controller.GetStatus();
+await controller.SendCommand("start");
+await controller.GetStatus();
 
 app.Run();

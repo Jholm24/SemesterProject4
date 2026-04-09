@@ -33,11 +33,12 @@
     <ProjectReference Include="Core\Core.csproj" />
     <ProjectReference Include="Orchestration\Orchestration.csproj" />
     <ProjectReference Include="Shared\Shared.csproj" />
+     <ProjectReference Include="Infrastructure.Assembly\Infrastructure.Assembly.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
-    <PackageReference Include="MQTTnet" Version="5.1.0.1559" />
+    <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.Composition" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
