@@ -6,6 +6,9 @@ obj/
 out/
 wwwroot/dist/
 wwwroot/build/
+*.dll
+*.pdb
+*.xml
 
 ##############################
 # User-specific files
