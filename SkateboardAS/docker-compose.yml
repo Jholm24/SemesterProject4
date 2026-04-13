@@ -20,6 +20,8 @@ services:
     environment:
       MQTT_TCP_CONNECTION_HOST: "mqtt"
       MQTT_TCP_CONNECTION_PORT: 1883
+    depends_on:
+      - mqtt
 
   db:
     image: postgres:16
@@ -31,6 +33,21 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - mqtt
+      - st4-agv
+      - st4-warehouse
+      - st4-assemblystation
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/skateboardas
+      SPRING_DATASOURCE_USERNAME: skateboardas
+      SPRING_DATASOURCE_PASSWORD: skateboardas
 
 volumes:
   pgdata:
