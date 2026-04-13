@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+    <!-- GENERIC card — renders ANY machine from ComponentCardModel -->
+    <th:block th:fragment="card(component)">
+        <div class="machine-card">
+            <!-- TODO: Implement — render name, icon, statusFields, actions -->
+            <div class="card-header">
+                <span th:text="${component.name}"></span>
+            </div>
+            <div class="card-body">
+                <!-- Status fields rendered dynamically -->
+            </div>
+            <div class="card-actions">
+                <!-- Actions rendered dynamically -->
+            </div>
+        </div>
+    </th:block>
+</body>
+</html>

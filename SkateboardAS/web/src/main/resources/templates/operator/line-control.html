@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Line Control — SkateboardAS</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/js/htmx.min.js}"></script>
+    <script th:src="@{/js/websocket-client.js}"></script>
+</head>
+<body>
+    <!-- TODO: Implement — start/stop/monitor a single line -->
+    <div th:insert="~{fragments/status-indicator :: indicator(${lineStatus})}"></div>
+</body>
+</html>

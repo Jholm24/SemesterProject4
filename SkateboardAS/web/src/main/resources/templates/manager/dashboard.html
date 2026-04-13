@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manager Dashboard — SkateboardAS</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/js/htmx.min.js}"></script>
+    <script th:src="@{/js/websocket-client.js}"></script>
+</head>
+<body>
+    <!-- TODO: Implement — renders ALL discovered components as cards via metadata -->
+    <div class="dashboard-grid">
+        <div th:each="component : ${components}"
+             th:insert="~{fragments/machine-card :: card(${component})}">
+        </div>
+    </div>
+</body>
+</html>

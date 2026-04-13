@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Lines — SkateboardAS</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/js/htmx.min.js}"></script>
+    <script th:src="@{/js/websocket-client.js}"></script>
+</head>
+<body>
+    <!-- TODO: Implement — view assigned production lines -->
+    <div th:each="line : ${lines}"
+         th:insert="~{fragments/production-line-card :: card(${line})}">
+    </div>
+</body>
+</html>

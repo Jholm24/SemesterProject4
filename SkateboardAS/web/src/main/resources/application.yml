@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/skateboardas
+    username: skateboardas
+    password: skateboardas
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    jwt:
+      secret: change-me-in-production
+      expiration-ms: 86400000  # 24 hours
+
+server:
+  port: 8080
+
+websocket:
+  endpoint: /ws
+  topic-prefix: /topic
+  app-prefix: /app
+
+machine:
+  agv:
+    base-url: http://localhost:8082
+  warehouse:
+    base-url: http://localhost:8081
+  assembly:
+    mqtt-host: localhost
+    mqtt-port: 1883
